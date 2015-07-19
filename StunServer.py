@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import time, sys, SocketServer, threading, struct
+from collections import namedtuple
 
 class StunServerThread (threading.Thread):
 	def __init__(self):
@@ -13,8 +14,9 @@ class StunServerThread (threading.Thread):
 		self.stunServer = SocketServer.UDPServer(('', self.UDPPort),self.handler)
 
 	def run(self):
-		while(True):
+		while(self.isAlive == True):
 			self.stunServer.handle_request()
+			#self.die()
 	
 	def die(self):
 		self.isAlive = False
@@ -22,12 +24,16 @@ class StunServerThread (threading.Thread):
 class StunHandler(SocketServer.BaseRequestHandler):
 	def handle(self):
 		try:	
-			print "New Request"
+			StunPacket = namedtuple("StunPacket", "type length cookie id")
 			request, socket = self.request
 			request = request.upper()
-			print request
-		except:
-			print "Handler Error"
+			print ''.join(x.encode('hex') for x in request)
+			# Unpack as packet according to rfc5389
+			newStunPacket = StunPacket._make(struct.unpack('>HHi%ds' %(12), request[0:20]))
+			print str(newStunPacket)
+		except Exception,e:
+			print "Handler Error: "
+			print str(e)
 
 class StunServer():
 	def __init__(self, maxThreads):
