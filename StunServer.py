@@ -27,7 +27,9 @@ class StunHandler(SocketServer.BaseRequestHandler):
 			StunPacket = namedtuple("StunPacket", "type length cookie id")
 			request, socket = self.request
 			request = request.upper()
-			print ''.join(x.encode('hex') for x in request)
+			# IP from received packet, ignore port
+			userIP = self.client_address[0]
+			print "Got IP: " + str(userIP)
 			# Unpack as packet according to rfc5389
 			newStunPacket = StunPacket._make(struct.unpack('>HHi%ds' %(12), request[0:20]))
 			print str(newStunPacket)
